@@ -1,0 +1,27 @@
+{
+  "name": "raspberrypi_surveillance",
+  "version": "1.0.0",
+  "description": "A security survillance program that uses a usb webcam and a cpl of ip cameras to monitor my home using my own created services using a raspberry pi and AWS cloud services",
+  "main": "monitor_folder.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/josephpaulmckenzie/raspberrypi_-surveillance-.git"
+  },
+  "keywords": [
+    "raspberrypi",
+    "security",
+    "cameras"
+  ],
+  "author": "Joseph Mckenzie",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/josephpaulmckenzie/raspberrypi_-surveillance-/issues"
+  },
+  "homepage": "https://github.com/josephpaulmckenzie/raspberrypi_-surveillance-#readme",
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}
