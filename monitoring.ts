@@ -28,6 +28,7 @@ export async function startMonitoring(folderPath: string) {
 
     // Log the event details to a local CSV file
     logEventToFile('A New Event Added', filePath, timestamp);
+    uploadNewMotionEventToS3(filePath)
   });
 
   watcher.on('change', (filePath) => {

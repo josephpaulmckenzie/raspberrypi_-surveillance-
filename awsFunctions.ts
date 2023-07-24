@@ -2,12 +2,12 @@ import AWS from 'aws-sdk';
 import fs from 'fs';
 import { configureAccountCreds } from './validators';
 import { StringOrNull } from './types';
-
+import path from 'path'; 
 require('dotenv').config();
 
 
 
-export async function uploadNewMotionEventToS3(localFilePath: string, s3Key: string) {
+export async function uploadNewMotionEventToS3(localFilePath: string) {
 
   configureAccountCreds();
 
@@ -17,6 +17,7 @@ export async function uploadNewMotionEventToS3(localFilePath: string, s3Key: str
   // Read the local file data
   const fileContent = fs.readFileSync(localFilePath);
   let s3Bucket:StringOrNull = process.env.AWS_BUCKET;
+  const s3Key = path.basename(localFilePath);
 
   if (s3Bucket && s3Key && fileContent) {
     // Set the parameters for S3 upload
