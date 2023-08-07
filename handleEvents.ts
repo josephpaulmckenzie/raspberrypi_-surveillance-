@@ -1,7 +1,9 @@
 import fs from 'fs';
-import {uploadNewMotionEventToS3} from './awsFunctions';
+import {uploadNewMotionEventToS3, sendAlertNotificationEmail} from './awsFunctions';
+import {type AlertDetails} from './types';
+import moment from 'moment-timezone';
 
-async function writeToLogFile(logEntry: string) {
+export async function writeToLogFile(logEntry: string) {
 	try {
 		await fs.promises.appendFile('./event_log.csv', logEntry);
 		console.log('Log updated');
@@ -10,21 +12,36 @@ async function writeToLogFile(logEntry: string) {
 	}
 }
 
-async function onMovieEnd(filePath: string) {
+export async function onMovieEnd(filePath: string) {
 	const movieEventEnded = 'Motion Event Ended';
-	const timestamp = new Date().toISOString();
+
+	//  A regular expression to match the timestamp format
+	const timestampRegex = /\d{2}-\d{2}-\d{4}_\d{2}\.\d{2}\.\d{2}(AM|PM)/;
+	const timestampMatch = timestampRegex.exec(filePath)!;
+	const timestamp: string = timestampMatch?.[0] ?? moment().format('M/D/YYYY, HH:mm:ss A');
+
 	const logEntry = `${movieEventEnded},${filePath},${timestamp}\n`;
 
 	await writeToLogFile(logEntry);
 	await uploadNewMotionEventToS3(filePath);
 }
 
-function onEventStart(filePath: string) {
+export async function onEventStart(filePath: string) {
 	console.log(`Event started: ${filePath}`);
-	// We can add an alert to send an SNS message as soon as a motion event is started
+
+	try {
+		const alertDetails: AlertDetails = {
+			messageBody: '!!! Alert  A new motion event has just been detected and is currently being recorded and uploaded. !!! Meanwhile here is a picture of what triggered the event',
+			messageSubject: 'A new motion event has been detected.',
+		};
+
+		await sendAlertNotificationEmail(alertDetails);
+	} catch (err: any) {
+		console.log('An error occurred while sending an alert notification for when a new event is started ', err);
+	}
 }
 
-function onEventEnd(filePath: string) {
+export function onEventEnd(filePath: string) {
 	console.log(`Event ended: ${filePath}`);
 }
 
@@ -34,7 +51,7 @@ const [, , command, filePath] = process.argv;
 (async () => {
 	switch (command) {
 		case 'onEventStart':
-			onEventStart(filePath);
+			await onEventStart(filePath);
 			break;
 		case 'onEventEnd':
 			onEventEnd(filePath);
@@ -46,5 +63,3 @@ const [, , command, filePath] = process.argv;
 			console.log(`Invalid command: ${command}`);
 	}
 })();
-
-export {onEventStart, onEventEnd, onMovieEnd};

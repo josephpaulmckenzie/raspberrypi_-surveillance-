@@ -14,9 +14,53 @@ AWSMock.mock('SES', 'sendEmail', (params: any, callback: any) => {
   callback(null, { MessageId: 'mocked-message-id' });
 });
 
-describe('uploadNewMotionEventToS3', () => {
 
+describe('uploadNewMotionEventToS3', () => {
+  const mockedFilePath = '/var/lib/motion/07-26-2023_01.12.30PM.mkv';
+
+  beforeAll(() => {
+    // Mocking the file read function
+    jest.mock('fs', () => ({
+      readFileSync: jest.fn(() => 'mocked file content'),
+    }));
+  });
+
+  it('should successfully upload a video to S3', async () => {
+    const response = await awsFunctions.uploadNewMotionEventToS3(mockedFilePath);
+    expect(response).toEqual({ data: 'successfully uploaded data' });
+  });
+
+  it('should throw an error if AWS_BUCKET environment variable is not set', async () => {
+    const originalEnv = process.env.AWS_BUCKET;
+    delete process.env.AWS_BUCKET;
+
+    try {
+      await awsFunctions.uploadNewMotionEventToS3(mockedFilePath);
+    } catch (error: any) {
+      expect(error.message).toBe('Invalid parameters. Check your function arguments.');
+    }
+
+    process.env.AWS_BUCKET = originalEnv;
+  });
+
+  it(`should throw an error when there's an issue uploading the video`, async () => {
+    AWSMock.remock('S3', 'upload', async (params: any) => {
+      throw new Error('S3 Upload Error');
+    });
+
+    try {
+      await awsFunctions.uploadNewMotionEventToS3(mockedFilePath);
+    } catch (error: any) {
+      expect(error.message).toBe('Error uploading file to S3: Error: S3 Upload Error');
+    }
+
+    // Resetting the mock to its original behavior after this test
+    AWSMock.remock('S3', 'upload', async (params: any) => {
+      return { Location: 'https://mocked-s3-url' };
+    });
+  });
 });
+
 
 describe('sendAlertNotificationEmail', () => {
   it('should send an email with provided alert details', async () => {
