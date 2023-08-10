@@ -1,7 +1,7 @@
 import AWS from 'aws-sdk';
 import fs from 'fs';
-import { configureAccountCreds } from './validators';
-import { AlertDetails } from './types';
+import { configureAccountCreds } from '../validators';
+import { AlertDetails } from '../types';
 import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config();

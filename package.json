@@ -10,16 +10,20 @@
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.3",
+    "@types/nodemailer": "^6.4.9",
     "aws-sdk-mock": "^5.8.0",
     "fs": "^0.0.1-security",
     "jest": "^29.6.2",
     "moment-timezone": "^0.5.43",
+    "nodemailer": "^6.9.4",
     "ts-jest": "^29.1.1",
+    "twilio": "^4.14.1",
     "typescript": "^5.1.6"
   },
   "dependencies": {
     "@types/moment-timezone": "^0.5.30",
     "aws-sdk": "^2.1427.0",
+    "axios": "^1.4.0",
     "dotenv": "^16.3.1",
     "path": "^0.12.7",
     "ts-node": "^10.9.1"

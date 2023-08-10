@@ -1,7 +1,10 @@
 import fs from 'fs';
-import {uploadNewMotionEventToS3, sendAlertNotificationEmail} from './awsFunctions';
+import {uploadNewMotionEventToS3, sendAlertNotificationEmail} from './src/awsFunctions';
 import {type AlertDetails} from './types';
 import moment from 'moment-timezone';
+import twilio from 'twilio';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export async function writeToLogFile(logEntry: string) {
 	try {
@@ -11,6 +14,16 @@ export async function writeToLogFile(logEntry: string) {
 		console.log(`Error writing to the event log: ${err}`);
 	}
 }
+
+// export async function sendTextNotification(params:type) {
+// const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN);
+// client.messages.create({
+//   body: 'New motion detected!',
+//   to: '+YOUR_PHONE_NUMBER',
+//   from: process.env.TWILIO_PHONE_NUMBER
+// });
+// }
+
 
 export async function onMovieEnd(filePath: string) {
 	const movieEventEnded = 'Motion Event Ended';
