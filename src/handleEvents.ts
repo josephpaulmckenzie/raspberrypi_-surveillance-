@@ -34,10 +34,15 @@ export async function onEventStart(filePath: string) {
 	console.log(`Event started: ${filePath}`);
 
 	try {
-		const message = '!!! Alert  A new motion event has just been detected !!!'
+		const message = `!!! Alert  A new motion event has just been detected !!!
+							A link will be sent to view it when it's ready`
 		const title = 'A new motion event has been detected.';
 
 		const response = await sendPushoverNotification(message, title);
+
+		// Hoping that ill be able to get easy access to the first frame on start of a motion event so we can include it in the push notification
+		// await sendPushWithImage('notification title', 'Alert message', 'path/to/image.png');
+
 		console.log('Notification sent:', response);
 	} catch (err: any) {
 		console.log('An error occurred while sending an alert notification upon a new event start ', err);
@@ -50,19 +55,23 @@ export function onEventEnd(filePath: string) {
 
 // Check command line arguments and call the corresponding function
 const [, , command, filePath] = process.argv;
-
 (async () => {
-	switch (command) {
-		case 'onEventStart':
-			await onEventStart(filePath);
-			break;
-		case 'onEventEnd':
-			onEventEnd(filePath);
-			break;
-		case 'onMovieEnd':
-			await onMovieEnd(filePath); // Await the function call here
-			break;
-		default:
-			console.log(`Invalid command: ${command}`);
+	try {
+		switch (command) {
+			case 'onEventStart':
+				await onEventStart(filePath);
+				break;
+			case 'onEventEnd':
+				onEventEnd(filePath);
+				break;
+			case 'onMovieEnd':
+				await onMovieEnd(filePath); 
+				break;
+			default:
+				console.log(`Invalid command: ${command}`);
+		}
+	} catch (err: any) {
+		console.log('An unexpected error occurred:', err);
 	}
 })();
+

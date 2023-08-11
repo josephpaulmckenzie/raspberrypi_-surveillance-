@@ -4,6 +4,9 @@ import * as nodemailer from 'nodemailer';
 import axios from 'axios';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
+import FormData from 'form-data';
+
 const envPath = path.join(__dirname, '..', '.env');
 dotenv.config({ path: envPath });
 
@@ -25,7 +28,7 @@ const formatRecipient = (recipient: string) => {
   }
 };
 
-const sendMail = (transporter: nodemailer.Transporter, options: nodemailer.SendMailOptions) => 
+const sendMail = (transporter: nodemailer.Transporter, options: nodemailer.SendMailOptions) =>
   transporter.sendMail(options, (error: any, info: any) => {
     if (error) {
       console.log(error);
@@ -56,7 +59,7 @@ export async function sendPushoverNotification(message: string, title?: string) 
     token: process.env.PUSHOVER_APP_TOKEN,
     user: process.env.PUSHOVER_USER_KEY,
     message: message,
-    title: title 
+    title: title
   };
 
   try {
@@ -67,3 +70,32 @@ export async function sendPushoverNotification(message: string, title?: string) 
     throw error;
   }
 }
+
+const sendPushWithImage = async (title: string, message: string, imagePath: string) => {
+  const url = 'https://api.pushover.net/1/messages.json';
+  const userKey = process.env.USER_KEY;
+  const apiToken = process.env.API_TOKEN;
+  const formData = new FormData();
+
+  if (!userKey || !apiToken) {
+    throw new Error('Environment variables USER_KEY and API_TOKEN must be defined.');
+  }
+
+  formData.append('user', userKey);
+  formData.append('token', apiToken);
+  formData.append('message', 'Your message here');
+  formData.append('file', fs.createReadStream(imagePath));
+  
+  const formHeaders = formData.getHeaders();
+
+  try {
+    const response = await axios.post(url, formData, {
+      headers: formHeaders,
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+  // sendPushWithImage('Your title here', 'Your message here', 'path/to/image.png');
