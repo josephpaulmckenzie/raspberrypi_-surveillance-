@@ -1,10 +1,11 @@
 import AWS from 'aws-sdk';
 import fs from 'fs';
-import { configureAccountCreds } from '../validators';
+import { configureAccountCreds } from './validators';
 import { AlertDetails } from '../types';
-import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+const envPath = path.join(__dirname, '..', '.env');
+dotenv.config({ path: envPath });
 
 export async function uploadNewMotionEventToS3(localFilePath: string) {
   configureAccountCreds();
@@ -25,9 +26,9 @@ export async function uploadNewMotionEventToS3(localFilePath: string) {
 
     try {
       await s3.upload(params).promise();
+	  console.log("Successfully uploaded new motion event")
       return { data: 'successfully uploaded data' };
     } catch (error: any) {
-      process.send?.(`Error uploading file to S3: ${error}`);
       throw new Error(`Error uploading file to S3: ${error}`);
     }
   } else {

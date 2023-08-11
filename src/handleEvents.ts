@@ -1,6 +1,7 @@
 import fs from 'fs';
-import {uploadNewMotionEventToS3, sendAlertNotificationEmail} from './src/awsFunctions';
-import {type AlertDetails} from './types';
+import { uploadNewMotionEventToS3, sendAlertNotificationEmail } from './awsFunctions';
+import { sendEmailorText, sendPushoverNotification } from './notificationServices'
+import { type AlertDetails } from '../types';
 import moment from 'moment-timezone';
 import twilio from 'twilio';
 import dotenv from 'dotenv';
@@ -8,25 +9,15 @@ dotenv.config();
 
 export async function writeToLogFile(logEntry: string) {
 	try {
-		await fs.promises.appendFile('./event_log.csv', logEntry);
+		await fs.promises.appendFile('/home/josephmckenzie/code/raspberrypi_surveillance/event_log.csv', logEntry);
 		console.log('Log updated');
 	} catch (err: any) {
 		console.log(`Error writing to the event log: ${err}`);
 	}
 }
 
-// export async function sendTextNotification(params:type) {
-// const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN);
-// client.messages.create({
-//   body: 'New motion detected!',
-//   to: '+YOUR_PHONE_NUMBER',
-//   from: process.env.TWILIO_PHONE_NUMBER
-// });
-// }
-
-
 export async function onMovieEnd(filePath: string) {
-	const movieEventEnded = 'Motion Event Ended';
+	const movieEventEnded = 'Motion Movie Event Ended';
 
 	//  A regular expression to match the timestamp format
 	const timestampRegex = /\d{2}-\d{2}-\d{4}_\d{2}\.\d{2}\.\d{2}(AM|PM)/;
@@ -43,14 +34,13 @@ export async function onEventStart(filePath: string) {
 	console.log(`Event started: ${filePath}`);
 
 	try {
-		const alertDetails: AlertDetails = {
-			messageBody: '!!! Alert  A new motion event has just been detected and is currently being recorded and uploaded. !!! Meanwhile here is a picture of what triggered the event',
-			messageSubject: 'A new motion event has been detected.',
-		};
+		const message = '!!! Alert  A new motion event has just been detected !!!'
+		const title = 'A new motion event has been detected.';
 
-		await sendAlertNotificationEmail(alertDetails);
+		const response = await sendPushoverNotification(message, title);
+		console.log('Notification sent:', response);
 	} catch (err: any) {
-		console.log('An error occurred while sending an alert notification for when a new event is started ', err);
+		console.log('An error occurred while sending an alert notification upon a new event start ', err);
 	}
 }
 

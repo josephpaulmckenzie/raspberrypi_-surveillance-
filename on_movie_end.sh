@@ -3,4 +3,4 @@
 
 # Call the TypeScript function using Node.js and pass the filename argument
 
-ts-node /home/josephmckenzie/code/raspberrypi_surveillance/handleEvents.ts onMovieEnd $1
+ts-node /home/josephmckenzie/code/raspberrypi_surveillance/src/handleEvents.ts onMovieEnd $1

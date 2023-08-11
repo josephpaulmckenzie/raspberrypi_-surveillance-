@@ -1,4 +1,7 @@
+// file name notificationServices.ts
+
 import * as nodemailer from 'nodemailer';
+import axios from 'axios';
 import dotenv from 'dotenv';
 import path from 'path';
 const envPath = path.join(__dirname, '..', '.env');
@@ -31,7 +34,7 @@ const sendMail = (transporter: nodemailer.Transporter, options: nodemailer.SendM
     }
   });
 
-async function sendEmailorText(recipient: string, subject: string, message: string) {
+export async function sendEmailorText(recipient: string, subject: string, message: string) {
   const transporter = getTransporter();
   const emailAddress = formatRecipient(recipient);
 
@@ -43,4 +46,24 @@ async function sendEmailorText(recipient: string, subject: string, message: stri
   };
 
   sendMail(transporter, mailOptions);
+}
+
+
+export async function sendPushoverNotification(message: string, title?: string) {
+  const url = 'https://api.pushover.net/1/messages.json';
+
+  const payload = {
+    token: process.env.PUSHOVER_APP_TOKEN,
+    user: process.env.PUSHOVER_USER_KEY,
+    message: message,
+    title: title 
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    throw error;
+  }
 }
