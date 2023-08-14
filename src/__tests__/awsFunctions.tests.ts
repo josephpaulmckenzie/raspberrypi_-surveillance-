@@ -2,8 +2,18 @@
 
 import * as awsFunctions from '../awsFunctions'; // Replace 'awsFunctions' with the actual file name
 import AWSMock from 'aws-sdk-mock';
+import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config();
+
+// const envPath = path.join(__dirname, '../..', '.env');
+// console.log(envPath)
+const result = dotenv.config();
+if (result.error) {
+  console.log('Error loading .env:', result.error);
+} else {
+  console.log(result)
+  console.log("envs", process.env.ADMIN_EMAIL)
+}
 
 AWSMock.mock('S3', 'upload', (params: any, callback: any) => {
   callback(null, { Location: 'https://mocked-s3-url' });

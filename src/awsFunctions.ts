@@ -4,8 +4,7 @@ import { configureAccountCreds } from './validators';
 import { AlertDetails } from '../types';
 import dotenv from 'dotenv';
 import path from 'path';
-const envPath = path.join(__dirname, '..', '.env');
-dotenv.config({ path: envPath });
+dotenv.config();
 
 export async function uploadNewMotionEventToS3(localFilePath: string) {
   configureAccountCreds();

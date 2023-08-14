@@ -4,8 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "jest"
-  },
+    "test": "jest --setupFiles dotenv/config"
+    },
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -26,6 +26,7 @@
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
     "path": "^0.12.7",
+    "pushover-notifications": "^1.2.2",
     "ts-node": "^10.9.1"
   }
 }

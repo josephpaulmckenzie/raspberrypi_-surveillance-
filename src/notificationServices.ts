@@ -1,14 +1,12 @@
-// file name notificationServices.ts
-
-import * as nodemailer from 'nodemailer';
 import axios from 'axios';
 import dotenv from 'dotenv';
-import path from 'path';
 import fs from 'fs';
 import FormData from 'form-data';
+import * as nodemailer from 'nodemailer';
+import path from 'path';
 
-const envPath = path.join(__dirname, '..', '.env');
-dotenv.config({ path: envPath });
+
+dotenv.config();
 
 const getTransporter = () => nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -28,74 +26,70 @@ const formatRecipient = (recipient: string) => {
   }
 };
 
-const sendMail = (transporter: nodemailer.Transporter, options: nodemailer.SendMailOptions) =>
-  transporter.sendMail(options, (error: any, info: any) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Message sent: ' + info.response);
-    }
-  });
-
 export async function sendEmailorText(recipient: string, subject: string, message: string) {
   const transporter = getTransporter();
   const emailAddress = formatRecipient(recipient);
+  const from = process.env.ADMIN_EMAIL;
 
   const mailOptions = {
-    from: process.env.ADMIN_EMAIL,
+    from: from,
     to: emailAddress,
     subject: subject,
     text: message,
   };
 
-  sendMail(transporter, mailOptions);
-}
-
-
-export async function sendPushoverNotification(message: string, title?: string) {
-  const url = 'https://api.pushover.net/1/messages.json';
-
-  const payload = {
-    token: process.env.PUSHOVER_APP_TOKEN,
-    user: process.env.PUSHOVER_USER_KEY,
-    message: message,
-    title: title
-  };
-
   try {
-    const response = await axios.post(url, payload);
-    return response.data;
+    const info = await transporter.sendMail(mailOptions);
+    // if (info) {
+    //   console.log('Message sent:!!!!!!!!!!!!!!!!!!!!!!!!!!!!', info);
+    // } else {
+    //   console.log('Message sent, but info is undefined');
+    // }
+    return info;
   } catch (error) {
-    console.error('Error sending notification:', error);
+    console.error('Error sending mail:', error); // Using console.error to log errors
     throw error;
   }
+
 }
-
-const sendPushWithImage = async (title: string, message: string, imagePath: string) => {
-  const url = 'https://api.pushover.net/1/messages.json';
-  const userKey = process.env.USER_KEY;
-  const apiToken = process.env.API_TOKEN;
-  const formData = new FormData();
-
-  if (!userKey || !apiToken) {
-    throw new Error('Environment variables USER_KEY and API_TOKEN must be defined.');
-  }
-
-  formData.append('user', userKey);
-  formData.append('token', apiToken);
-  formData.append('message', 'Your message here');
-  formData.append('file', fs.createReadStream(imagePath));
-  
-  const formHeaders = formData.getHeaders();
-
+export const sendPushoverNotification = async (title: string, messageText: string, file_path: string) => {
   try {
-    const response = await axios.post(url, formData, {
-      headers: formHeaders,
-    });
-    console.log(response.data);
-  } catch (error) {
-    console.error(error);
-  }
-}
+    const filePath = '/home/josephmckenzie/Documents/08112023152315-02.jpg';
+    const filename = path.basename(filePath);
 
-  // sendPushWithImage('Your title here', 'Your message here', 'path/to/image.png');
+    // Read the file into a buffer
+    const fileBuffer = fs.readFileSync(filePath);
+
+    const form = new FormData();
+    form.append('token', process.env.PUSHOVER_APP_TOKEN);
+    form.append('user', process.env.PUSHOVER_USER_KEY);
+
+    const msg: { [key: string]: string | number } = {
+      message: messageText,
+      title: title,
+      sound: 'siren',
+      device: 'devicename',
+      priority: 1,
+    };
+
+    for (const key in msg) {
+      if (msg[key]) {
+        form.append(key, msg[key]);
+      }
+    }
+
+    // Append the file buffer instead of the stream
+    form.append('attachment', fileBuffer, {
+      filename: filename,
+      contentType: 'image/jpeg',
+    });
+
+    const response = await axios.post('https://api.pushover.net/1/messages.json', form, {
+      headers: { ...form.getHeaders() },
+    });
+
+    console.log('Notification sent:', response.status);
+  } catch (error: any) {
+    console.error(`Error sending notification:`, error);
+  }
+};
