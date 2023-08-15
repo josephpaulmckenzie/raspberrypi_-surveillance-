@@ -1,20 +1,19 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
 import fs from 'fs';
 import FormData from 'form-data';
 import * as nodemailer from 'nodemailer';
 import path from 'path';
+import {config} from '../env.config'
 
-
-dotenv.config();
+const {adminEmail,adminEmailPassword,pushoverAppToken,pushoverUserKey} = config;
 
 const getTransporter = () => nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
   secure: true,
   auth: {
-    user: process.env.ADMIN_EMAIL,
-    pass: process.env.ADMIN_EMAIL_PASSWORD
+    user: adminEmail,
+    pass: adminEmailPassword
   }
 });
 
@@ -40,21 +39,15 @@ export async function sendEmailorText(recipient: string, subject: string, messag
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    // if (info) {
-    //   console.log('Message sent:!!!!!!!!!!!!!!!!!!!!!!!!!!!!', info);
-    // } else {
-    //   console.log('Message sent, but info is undefined');
-    // }
     return info;
   } catch (error) {
-    console.error('Error sending mail:', error); // Using console.error to log errors
+    console.error('Error sending mail:', error); 
     throw error;
   }
 
 }
-export const sendPushoverNotification = async (title: string, messageText: string, file_path: string) => {
+export const sendPushoverNotification = async (title: string, messageText: string, filePath: string) => {
   try {
-    const filePath = '/home/josephmckenzie/Documents/08112023152315-02.jpg';
     const filename = path.basename(filePath);
 
     // Read the file into a buffer

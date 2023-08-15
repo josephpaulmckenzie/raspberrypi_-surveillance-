@@ -3,17 +3,9 @@
 import * as awsFunctions from '../awsFunctions'; // Replace 'awsFunctions' with the actual file name
 import AWSMock from 'aws-sdk-mock';
 import path from 'path';
-import dotenv from 'dotenv';
-
-// const envPath = path.join(__dirname, '../..', '.env');
-// console.log(envPath)
-const result = dotenv.config();
-if (result.error) {
-  console.log('Error loading .env:', result.error);
-} else {
-  console.log(result)
-  console.log("envs", process.env.ADMIN_EMAIL)
-}
+import {config,additonalServicesEnvs} from '../../env.config'
+const {AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION} = config;
+const {AWS_S3_BUCKET,ADMIN_EMAIL} = additonalServicesEnvs;
 
 AWSMock.mock('S3', 'upload', (params: any, callback: any) => {
   callback(null, { Location: 'https://mocked-s3-url' });
@@ -41,7 +33,7 @@ describe('uploadNewMotionEventToS3', () => {
   });
 
   it('should throw an error if AWS_BUCKET environment variable is not set', async () => {
-    const originalEnv = process.env.AWS_BUCKET;
+    const originalEnv = AWS_S3_BUCKET;
     delete process.env.AWS_BUCKET;
 
     try {
@@ -92,7 +84,7 @@ describe('sendAlertNotificationEmail', () => {
 
   it('should throw an error if the email address is not configured', async () => {
 
-    const originalEnv = process.env.EMAIL_ALERT_ADDRESS;
+    const originalEnv = ADMIN_EMAIL
     delete process.env.EMAIL_ALERT_ADDRESS;
 
     const alertDetails = {

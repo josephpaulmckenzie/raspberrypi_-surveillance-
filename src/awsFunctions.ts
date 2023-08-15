@@ -1,23 +1,43 @@
 import AWS from 'aws-sdk';
 import fs from 'fs';
-import { configureAccountCreds } from './validators';
 import { AlertDetails } from '../types';
-import dotenv from 'dotenv';
+import {config,validateOptionalEnvVariables,additonalServicesEnvs} from '../env.config'
 import path from 'path';
-dotenv.config();
+const {AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION, ADMIN_EMAIL} = config;
+
+export function configureAccountCreds(): void {
+	// Attempt to get AWS credentials from an AWS config file
+	AWS.config.getCredentials(err => {
+		if (err) {
+			console.error('Error while attempting to set credentails using an AWS config file:', err.message);
+			// Set AWS credentials and region using required environment variables that were vvalidated when the env.config file was loaded
+			AWS.config.update({
+				accessKeyId: AWS_ACCESS_KEY_ID,
+				secretAccessKey: AWS_SECRET_ACCESS_KEY,
+				region: AWS_REGION,
+			});
+
+			console.log('AWS credentials have been successfully set using available environmental variables.');
+		} else {
+			console.log('AWS credentials were configured using an existing AWS config file. ');
+		}
+	});
+}
 
 export async function uploadNewMotionEventToS3(localFilePath: string) {
   configureAccountCreds();
+	validateOptionalEnvVariables(['AWS_S3_BUCKET']);
+  const {AWS_S3_BUCKET} = additonalServicesEnvs
 
   const s3 = new AWS.S3();
 
   const fileContent = fs.readFileSync(localFilePath);
-  const s3Bucket = process.env.AWS_BUCKET;
+//   const s3Bucket = AWS_S3_BUCKET;
   const s3Key = path.basename(localFilePath);
 
-  if (s3Bucket && s3Key && fileContent) {
+  if (AWS_S3_BUCKET && s3Key && fileContent) {
     const params = {
-      Bucket: s3Bucket,
+      Bucket: AWS_S3_BUCKET,
       Key: `videos/${s3Key}`,
       Body: fileContent,
       ContentType: 'video/mp4',
@@ -36,17 +56,13 @@ export async function uploadNewMotionEventToS3(localFilePath: string) {
 }
 
 export async function sendAlertNotificationEmail(alertDetails: AlertDetails) {
+	
 	const ses = new AWS.SES();
 	const { messageBody, messageSubject } = alertDetails;
-	const emailAddress = process.env.EMAIL_ALERT_ADDRESS
-	// Check if the 'emailAddress' is undefined or an empty string
-	if (!emailAddress || emailAddress.trim() === '') {
-	  throw new Error('Email address not configured. Please set EMAIL_ALERT_ADDRESS environment variable.');
-	}
-  
+ 
 	const params = {
 	  Destination: {
-		ToAddresses: [`${emailAddress}`],
+		ToAddresses: [`${ADMIN_EMAIL}`],
 	  },
 	  Message: {
 		Body: {
@@ -54,7 +70,7 @@ export async function sendAlertNotificationEmail(alertDetails: AlertDetails) {
 		},
 		Subject: { Data: `${messageSubject}` },
 	  },
-	  Source: `${emailAddress}`,
+	  Source: `${ADMIN_EMAIL}`,
 	};
   
 	try {
