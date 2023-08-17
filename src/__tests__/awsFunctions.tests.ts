@@ -3,7 +3,6 @@ import * as awsFunctions from '../awsFunctions'; // Replace 'awsFunctions' with 
 import AWSMock from 'aws-sdk-mock';
 import path from 'path';
 import * as originalEnvConfig from '../../env.config';
-// import mockProcess from 'jest-mock-process';
 
 describe('uploadNewMotionEventToS3', () => {
   let mockedFilePath = '/var/lib/motion/07-26-2023_01.12.30PM.mkv';

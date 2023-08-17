@@ -2,21 +2,24 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-function validateEnvVariable(value: string | undefined, envName: string): string {
-  if (!value) {
+export function validateEnvVariable(value: string | undefined, envName: string): string {
+  if (value === undefined) {
     throw new Error(`The environmental variable "${envName}" could not be located.`);
+  }
+  if (value.trim() === '') {
+    throw new Error(`The environmental variable "${envName}" value is a blank string.`);
   }
   return value;
 }
 
-function validateEmail(email: string): string {
+
+export function validateEmail(email: string): string {
   // A simple regex for email validation
   const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   if (!regex.test(email)) {
     throw new Error(`Invalid email format for "${email}".`);
   }
-
   return email;
 }
 
