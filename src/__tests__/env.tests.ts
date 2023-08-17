@@ -33,7 +33,7 @@ describe('validateEmail', () => {
 describe('validateAdditonalServicesConfig', () => {
     it('should throw error if the value for the key is missing or blank', () => {
         process.env['MISSING_KEY'] = ''; // Simulate missing environment variable
-        expect(() => validateAdditonalServicesConfig(['MISSING_KEY'])).toThrowError('Invalid or missing value for key: MISSING_KEY');
+        expect(() => validateAdditonalServicesConfig(['MISSING_KEY'])).toThrowError(`The environmental variable MISSING_KEY value is a blank string.`);
     });
 
     it('should not throw error if the value for the key is valid', () => {

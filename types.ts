@@ -11,3 +11,4 @@ export type AlertDetails = {
 	
 };
 
+export type AWSService = "S3" | "ACM" | "APIGateway" | "ApplicationAutoScaling" | "AppStream" | "AutoScaling" | /* ... other services ... */ "ManagedBlockchainQuery";

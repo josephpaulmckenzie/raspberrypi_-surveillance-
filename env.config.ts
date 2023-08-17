@@ -50,8 +50,11 @@ const additonalServicesConfig: Record<string, string> = {};
 export function validateAdditonalServicesConfig(keys: string[]) {
   keys.forEach((key) => {
     const value = process.env[key];
-    if (!value || value.trim() === '') {
-      throw new Error(`Invalid or missing value for key: ${key}`);
+    if (value === undefined) {
+      throw new Error(`The environmental variable ${key} could not be located.`);
+    }
+    if (value.trim() === '') {
+      throw new Error(`The environmental variable ${key} value is a blank string.`);
     }
   });
 }

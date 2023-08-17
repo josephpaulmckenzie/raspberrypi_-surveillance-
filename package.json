@@ -10,6 +10,8 @@
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.3",
+    "@types/mime": "^3.0.1",
+    "@types/mock-fs": "^4.13.1",
     "@types/nodemailer": "^6.4.9",
     "aws-sdk-mock": "^5.8.0",
     "fs": "^0.0.1-security",
@@ -21,11 +23,15 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.391.0",
+    "@aws-sdk/client-ses": "^3.391.0",
+    "@aws-sdk/credential-provider-node": "^3.391.0",
     "@types/moment-timezone": "^0.5.30",
     "aws-sdk": "^2.1427.0",
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
     "jest-mock-process": "^2.0.0",
+    "mock-fs": "^5.2.0",
     "path": "^0.12.7",
     "pushover-notifications": "^1.2.2",
     "ts-node": "^10.9.1"

@@ -1,52 +1,62 @@
-// awsFunctions.tests.ts
+import AWS from 'aws-sdk';
+import { uploadNewMotionEventToS3,sendAlertNotificationEmail } from '@src/awsFunctions';
+import { S3 } from '@aws-sdk/client-s3';
+import mockFs from 'mock-fs';
 
-// The @ 's are just an alais to the to the folder so we dont have to write paths or ../.. type stuff everywhere
-import * as awsFunctions from '@src/awsFunctions';
-import AWSMock from 'aws-sdk-mock';
+jest.mock('aws-sdk');
+jest.mock('@aws-sdk/client-s3');
 
 describe('uploadNewMotionEventToS3', () => {
-  let mockedFilePath = '/var/lib/motion/07-26-2023_01.12.30PM.mkv';
-  let originalEnv: NodeJS.ProcessEnv;
-
-  beforeAll(() => {
-    // Initial mock for S3 upload
-    AWSMock.mock('S3', 'upload', async (params: any) => {
-      return { Location: 'https://mocked-s3-url' };
+  // Set up a mock file system before running the tests
+  beforeEach(() => {
+    mockFs({
+      '/var/lib/motion/08112023152315-02.jpg': 'file content here', // You can modify this to match a real test file
     });
   });
 
-  beforeEach(() => {
-    // Store the current environment so any changes made during tests can be easily reverted back to an original state
-    originalEnv = { ...process.env };
+  // Restore the real filesystem after running the tests
+  afterEach(() => {
+    mockFs.restore();
   });
 
-  afterEach(() => {
-    // Restore the original environment after each test
-    process.env = originalEnv;
+  it('should throw an error if parameters are invalid', async () => {
+    await expect(uploadNewMotionEventToS3('')).rejects.toThrow('Invalid parameters. Check your function arguments.');
+  });
+
+  it('should throw an error if file does not exist', async () => {
+    await expect(uploadNewMotionEventToS3('non-existent-file-path')).rejects.toThrow(`ENOENT: no such file or directory, open 'non-existent-file-path'`); // Consider enhancing the function to throw a specific error for this case
+  });
+
+  // Add more tests to cover other scenarios, such as successful uploads, handling of different mime types, etc.
+
+});
+
+
+
+
+describe('sendAlertNotificationEmail', () => {
+  let originalConsoleError: any;
+
+  beforeAll(() => {
+    originalConsoleError = console.error;
+    console.error = jest.fn();
   });
 
   afterAll(() => {
-    AWSMock.restore();
+    console.error = originalConsoleError;
   });
 
-  it(`should throw an error if AWS_S3_BUCKET is an empty string or doesn't exist`, async () => {
-    process.env.AWS_S3_BUCKET = '';
-    await expect(awsFunctions.uploadNewMotionEventToS3(mockedFilePath))
-      .rejects
-      .toThrow('Invalid or missing value for key: AWS_S3_BUCKET');
+  it('should send the email successfully', async () => {
+    AWS.SES.prototype.sendEmail = jest.fn().mockReturnValue({
+      promise: jest.fn().mockResolvedValue({ MessageId: 'message-id' }),
+    });
+    await expect(sendAlertNotificationEmail({ messageBody: 'body', messageSubject: 'subject' })).resolves.not.toThrow();
   });
 
-  it(`should throw an error when attempting to upload a file that does not exist`, async () => {
-    process.env.AWS_S3_BUCKET = 'test_bucket';;
-    mockedFilePath = ''
-
-    await expect(awsFunctions.uploadNewMotionEventToS3(mockedFilePath))
-      .rejects
-      .toThrow('ENOENT: no such file or directory, open');
+  it('should throw an error if sending email fails', async () => {
+    AWS.SES.prototype.sendEmail = jest.fn().mockReturnValue({
+      promise: jest.fn().mockRejectedValue(new Error('Error sending email: Email Error')),
+    });
+    await expect(sendAlertNotificationEmail({ messageBody: 'body', messageSubject: 'subject' })).rejects.toThrow('Error sending email: Email Error');
   });
-});
-
-// Your other test suite can remain the same as there were no changes to it
-describe('sendAlertNotificationEmail', () => {
-  // ... rest of your code
 });

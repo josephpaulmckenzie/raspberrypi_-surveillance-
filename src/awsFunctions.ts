@@ -1,57 +1,42 @@
+import { S3, PutObjectCommand } from "@aws-sdk/client-s3";
 import AWS from 'aws-sdk';
 import fs from 'fs';
-import { AlertDetails } from '../types';
-import {config,additonalServicesConfig,validateAdditonalServicesConfig } from '../env.config'
 import path from 'path';
-const { awsAccessKeyId, awsSecretAccessKey, awsRegion, adminEmail } = config;;
+import mime from 'mime';
+import { AlertDetails } from '../types';
+import { config, additonalServicesConfig, validateAdditonalServicesConfig } from '../env.config';
 
-export function configureAccountCreds(): Promise<void> {
-	return new Promise((resolve, reject) => {
-		// Attempt to get AWS credentials from an AWS config file
-		AWS.config.getCredentials(err => {
-			if (err) {
-				console.error('Error while attempting to set credentials using an AWS config file:', err.message);
-				// Set AWS credentials and region using required environment variables that were validated when the env.config file was loaded
-				AWS.config.update({
-					accessKeyId: awsAccessKeyId,
-					secretAccessKey: awsSecretAccessKey,
-					region: awsRegion,
-				});
+const { awsRegion, adminEmail } = config;
+const { AWS_S3_BUCKET } = additonalServicesConfig;
 
-				console.log('AWS credentials have been successfully set using available environmental variables.');
-				resolve();
-			} else {
-				console.log('AWS credentials were configured using an existing AWS config file.');
-				resolve();
-			}
-		});
-	});
-}
+export async function uploadNewMotionEventToS3(localFilePath: string): Promise<{ data: string } | Error> {
+	validateAdditonalServicesConfig(['AWS_S3_BUCKET']);
 
+	if (!localFilePath || typeof localFilePath !== 'string') {
+		throw new Error('Invalid parameters. Check your function arguments.');
+	}
 
-export async function uploadNewMotionEventToS3(localFilePath: string) {
-	// await configureAccountCreds();
-	validateAdditonalServicesConfig(['AWS_S3_BUCKET']); // We can add more enviromental variable keys/names to validate.
-	const { AWS_S3_BUCKET } = additonalServicesConfig // Since we are only currently getting on additional env we dont have to destructure the variable names
-
-	const s3 = new AWS.S3();
-
+	const s3 = new S3({ region: awsRegion });
 	const fileContent = fs.readFileSync(localFilePath);
 	const s3Key = path.basename(localFilePath);
+	const mimeType = mime.getType(localFilePath) || 'application/octet-stream';
 
 	if (s3Key && fileContent) {
 		const params = {
 			Bucket: AWS_S3_BUCKET,
 			Key: `videos/${s3Key}`,
 			Body: fileContent,
-			ContentType: 'video/mp4',
+			ContentType: mimeType,
 		};
 
+		const command = new PutObjectCommand(params);
+
 		try {
-			await s3.upload(params).promise();
-			console.log("Successfully uploaded new motion event")
+			await s3.send(command);
+			console.log("Successfully uploaded new motion event");
 			return { data: 'successfully uploaded data' };
-		} catch (error: any) {
+		} catch (error) {
+			console.error(`Error uploading file to S3: ${error}`);
 			throw new Error(`Error uploading file to S3: ${error}`);
 		}
 	} else {
@@ -59,22 +44,21 @@ export async function uploadNewMotionEventToS3(localFilePath: string) {
 	}
 }
 
-export async function sendAlertNotificationEmail(alertDetails: AlertDetails) {
-
+export async function sendAlertNotificationEmail(alertDetails: AlertDetails): Promise<void | Error> {
 	const ses = new AWS.SES();
 	const { messageBody, messageSubject } = alertDetails;
 
 	const params = {
 		Destination: {
-			ToAddresses: [`${adminEmail}`],
+			ToAddresses: [adminEmail],
 		},
 		Message: {
 			Body: {
-				Text: { Data: `${messageBody}` },
+				Text: { Data: messageBody },
 			},
-			Subject: { Data: `${messageSubject}` },
+			Subject: { Data: messageSubject },
 		},
-		Source: `${adminEmail}`,
+		Source: adminEmail,
 	};
 
 	try {
