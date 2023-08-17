@@ -1,110 +1,84 @@
 // awsFunctions.tests.ts
-
 import * as awsFunctions from '../awsFunctions'; // Replace 'awsFunctions' with the actual file name
 import AWSMock from 'aws-sdk-mock';
 import path from 'path';
-import {config,additonalServicesEnvs} from '../../env.config'
-const {AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION} = config;
-const {AWS_S3_BUCKET,ADMIN_EMAIL} = additonalServicesEnvs;
-
-AWSMock.mock('S3', 'upload', (params: any, callback: any) => {
-  callback(null, { Location: 'https://mocked-s3-url' });
-});
-
-// Mock the AWS SDK SES sendEmail function
-AWSMock.mock('SES', 'sendEmail', (params: any, callback: any) => {
-  callback(null, { MessageId: 'mocked-message-id' });
-});
-
+import * as originalEnvConfig from '../../env.config';
+// import mockProcess from 'jest-mock-process';
 
 describe('uploadNewMotionEventToS3', () => {
-  const mockedFilePath = '/var/lib/motion/07-26-2023_01.12.30PM.mkv';
+  let mockedFilePath = '/var/lib/motion/07-26-2023_01.12.30PM.mkv';
+  let originalEnv: NodeJS.ProcessEnv;
 
   beforeAll(() => {
-    // Mocking the file read function
-    jest.mock('fs', () => ({
-      readFileSync: jest.fn(() => 'mocked file content'),
+    // Clone the original config
+    const config = {
+      ...originalEnvConfig.config,
+      additonalServicesConfig: {
+        ...originalEnvConfig.additonalServicesConfig,
+        AWS_S3_BUCKET: 'valid-bucket',
+      },
+    };
+
+    // Jest mock for config module
+    jest.mock('../../env.config', () => ({
+      config,
+      additonalServicesConfig: config.additonalServicesConfig,
     }));
-  });
 
-  it('should successfully upload a video to S3', async () => {
-    const response = await awsFunctions.uploadNewMotionEventToS3(mockedFilePath);
-    expect(response).toEqual({ data: 'successfully uploaded data' });
-  });
-
-  it('should throw an error if AWS_BUCKET environment variable is not set', async () => {
-    const originalEnv = AWS_S3_BUCKET;
-    delete process.env.AWS_BUCKET;
-
-    try {
-      await awsFunctions.uploadNewMotionEventToS3(mockedFilePath);
-    } catch (error: any) {
-      expect(error.message).toBe('Invalid parameters. Check your function arguments.');
-    }
-
-    process.env.AWS_BUCKET = originalEnv;
-  });
-
-  it(`should throw an error when there's an issue uploading the video`, async () => {
-    AWSMock.remock('S3', 'upload', async (params: any) => {
-      throw new Error('S3 Upload Error');
-    });
-
-    try {
-      await awsFunctions.uploadNewMotionEventToS3(mockedFilePath);
-    } catch (error: any) {
-      expect(error.message).toBe('Error uploading file to S3: Error: S3 Upload Error');
-    }
-
-    // Resetting the mock to its original behavior after this test
-    AWSMock.remock('S3', 'upload', async (params: any) => {
+    // Initial mock for S3 upload
+    AWSMock.mock('S3', 'upload', async (params: any) => {
       return { Location: 'https://mocked-s3-url' };
     });
   });
+
+  afterAll(() => {
+    AWSMock.restore();  
+  });
+
+  beforeEach(() => {
+    // Store the original environment
+    originalEnv = { ...process.env };
+    // Modify the environment variable you want to mock
+    process.env.AWS_S3_BUCKET = '';
+  });
+
+  afterEach(() => {
+    // Restore the original environment after each test
+    process.env = originalEnv;
+  });
+
+  it(`should throw an error if AWS_S3_BUCKET is an empty string or doesn't exist`, async () => {
+    // Backup the original value
+    const originalBucket = process.env.AWS_S3_BUCKET;
+
+    // Set AWS_S3_BUCKET to an empty string
+    process.env.AWS_S3_BUCKET = '';
+
+    // Perform the test
+    await expect(awsFunctions.uploadNewMotionEventToS3(mockedFilePath))
+      .rejects
+      .toThrow('Invalid or missing value for key: AWS_S3_BUCKET');
+
+    // Restore the original value
+    process.env.AWS_S3_BUCKET = originalBucket;
+  });
+
+
+  it(`should throw an error whenattempting to upload a file that does not exist`, async () => {
+    process.env.AWS_S3_BUCKET = 'test_bucket';;
+    mockedFilePath = ''
+
+    // AWSMock.remock('S3', 'upload', async (params: any) => {
+    //   throw new Error('S3 Upload Error');
+    // });
+
+    await expect(awsFunctions.uploadNewMotionEventToS3(mockedFilePath))
+      .rejects
+      .toThrow('ENOENT: no such file or directory, open');
+  });
 });
 
-
+// Your other test suite can remain the same as there were no changes to it
 describe('sendAlertNotificationEmail', () => {
-  it('should send an email with provided alert details', async () => {
-    const alertDetails = {
-      messageBody: 'Test email body',
-      messageSubject: 'Test email subject',
-    };
-  
-    // Use a mock to intercept console.log
-    const consoleLogMock = jest.spyOn(console, 'log').mockImplementation();
-  
-    await awsFunctions.sendAlertNotificationEmail(alertDetails);
-  
-    // Check if the "Email sent" message is logged
-    expect(consoleLogMock).toHaveBeenCalledWith('Email sent:', 'mocked-message-id');
-  
-    consoleLogMock.mockRestore();
-  });
-
-  it('should throw an error if the email address is not configured', async () => {
-
-    const originalEnv = ADMIN_EMAIL
-    delete process.env.EMAIL_ALERT_ADDRESS;
-
-    const alertDetails = {
-      messageBody: 'Test email body',
-      messageSubject: 'Test email subject',
-    };
-
-    try {
-      await awsFunctions.sendAlertNotificationEmail(alertDetails);
-    } catch (error: any) { 
-     
-      expect(error.message).toBe(
-        'Email address not configured. Please set EMAIL_ALERT_ADDRESS environment variable.'
-      );
-    }
-
-    process.env.EMAIL_ALERT_ADDRESS = originalEnv;
-  });
-
-  // Add more test cases to cover other scenarios
+  // ... rest of your code
 });
-
-

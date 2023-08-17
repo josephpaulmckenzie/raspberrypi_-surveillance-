@@ -39,23 +39,21 @@ for (const envKey of envKeys) {
   if (envKey === 'ADMIN_EMAIL') {
     envValue = validateEmail(envValue);
   }
-
   config[envKey] = envValue;
 }
 
-const additonalServicesEnvs: Record<string, string> = {};
+const additonalServicesConfig: Record<string, string> = {};
 
-export function validateOptionalEnvVariables(variableNames: string[]): Record<string, string> {
-  for (const variableName of variableNames) {
-    const value = process.env[variableName];
-    if (!value) {
-      throw new Error(`The environmental variable "${variableName}" must be set at this point.`);
+export function validateAdditonalServicesConfig(keys: string[]) {
+  keys.forEach((key) => {
+    const value = process.env[key];
+    if (!value || value.trim() === '') {
+      throw new Error(`Invalid or missing value for key: ${key}`);
     }
-    additonalServicesEnvs[variableName] = value;
-  }
-  return additonalServicesEnvs;
+  });
 }
 
-export { config,additonalServicesEnvs };
+
+export { config, additonalServicesConfig };
 
 

@@ -4,8 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "jest --setupFiles dotenv/config"
-    },
+    "test": "jest"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -25,6 +25,7 @@
     "aws-sdk": "^2.1427.0",
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
+    "jest-mock-process": "^2.0.0",
     "path": "^0.12.7",
     "pushover-notifications": "^1.2.2",
     "ts-node": "^10.9.1"

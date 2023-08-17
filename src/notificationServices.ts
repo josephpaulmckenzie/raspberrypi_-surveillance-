@@ -49,10 +49,7 @@ export async function sendEmailorText(recipient: string, subject: string, messag
 export const sendPushoverNotification = async (title: string, messageText: string, filePath: string) => {
   try {
     const filename = path.basename(filePath);
-
-    // Read the file into a buffer
     const fileBuffer = fs.readFileSync(filePath);
-
     const form = new FormData();
     form.append('token', process.env.PUSHOVER_APP_TOKEN);
     form.append('user', process.env.PUSHOVER_USER_KEY);
@@ -80,8 +77,6 @@ export const sendPushoverNotification = async (title: string, messageText: strin
     const response = await axios.post('https://api.pushover.net/1/messages.json', form, {
       headers: { ...form.getHeaders() },
     });
-
-    console.log('Notification sent:', response.status);
   } catch (error: any) {
     console.error(`Error sending notification:`, error);
   }
