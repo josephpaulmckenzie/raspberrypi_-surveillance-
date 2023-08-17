@@ -3,7 +3,7 @@ import fs from 'fs';
 import FormData from 'form-data';
 import * as nodemailer from 'nodemailer';
 import path from 'path';
-import {config} from '../env.config'
+import {config} from '@root/env.config'
 
 const {adminEmail,adminEmailPassword,pushoverAppToken,pushoverUserKey} = config;
 
