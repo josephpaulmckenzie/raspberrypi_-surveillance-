@@ -1,6 +1,7 @@
 import AWS from 'aws-sdk';
-import { uploadNewMotionEventToS3,sendAlertNotificationEmail } from '@src/awsFunctions';
-import { S3 } from '@aws-sdk/client-s3';
+
+import { uploadNewMotionEventToS3, sendAlertNotificationEmail } from '@src/awsFunctions';
+import { S3Client, PutObjectCommand, PutObjectOutput, S3 } from "@aws-sdk/client-s3";
 import mockFs from 'mock-fs';
 
 jest.mock('aws-sdk');
@@ -9,8 +10,15 @@ jest.mock('@aws-sdk/client-s3');
 describe('uploadNewMotionEventToS3', () => {
   // Set up a mock file system before running the tests
   beforeEach(() => {
+    jest.mock('@aws-sdk/client-s3', () => ({
+      S3: jest.fn().mockImplementation(() => ({
+        send: jest.fn().mockResolvedValue({ /* Your mock data here */ }),
+      })),
+    }));
+
     mockFs({
-      '/var/lib/motion/08112023152315-02.jpg': 'file content here', // You can modify this to match a real test file
+      '/var/lib/motion/08112023143520-06.jpg': 'file content here',
+      '/var/lib/motion/07-27-2023_03.03.53PM.mkv': 'video content here',
     });
   });
 
@@ -24,14 +32,61 @@ describe('uploadNewMotionEventToS3', () => {
   });
 
   it('should throw an error if file does not exist', async () => {
-    await expect(uploadNewMotionEventToS3('non-existent-file-path')).rejects.toThrow(`ENOENT: no such file or directory, open 'non-existent-file-path'`); // Consider enhancing the function to throw a specific error for this case
+    await expect(uploadNewMotionEventToS3('non-existent-file-path')).rejects.toThrow(`ENOENT: no such file or directory, open 'non-existent-file-path'`);
   });
+});
 
-  // Add more tests to cover other scenarios, such as successful uploads, handling of different mime types, etc.
+it('should successfully upload an JPEG file', async () => {
+  const s3 = new S3({ region: 'us-east-1' });
 
+  const sendSpy = jest.spyOn(s3, 'send').mockImplementation(
+    () => {
+      return Promise.resolve(mockReturnValue) as Promise<PutObjectOutput>;
+    }
+  );
+  const mockReturnValue: PutObjectOutput = {
+    ETag: 'some-etag-value',
+    VersionId: 'some-version-id',
+    ServerSideEncryption: 'AES256',
+    // Add other properties as needed.
+  };
+
+  // Call your function
+  await uploadNewMotionEventToS3('/var/lib/motion/08112023143520-06.jpg');
+
+  // Expect that the send method was called with an instance of PutObjectCommand
+  expect(sendSpy).toHaveBeenCalledWith(expect.any(PutObjectCommand));
+
+  // Clean up the spy
+  sendSpy.mockRestore();
 });
 
 
+it('should successfully upload an MP4 file', async () => {
+  const s3 = new S3({ region: 'us-east-1' });
+
+  const sendSpy = jest.spyOn(s3, 'send').mockImplementation(
+    () => {
+      return Promise.resolve(mockReturnValue) as Promise<PutObjectOutput>;
+    }
+  );
+  const mockReturnValue: PutObjectOutput = {
+    ETag: 'some-etag-value',
+    VersionId: 'some-version-id',
+    ServerSideEncryption: 'AES256',
+    // Add other properties as needed for your test...
+  };
+
+  // sendSpy.mockResolvedValue(mockReturnValue);
+
+  // Call your function
+  await uploadNewMotionEventToS3('/var/lib/motion/08112023143520-06.jpg');
+
+  // Expect that the send method was called with an instance of PutObjectCommand
+  expect(sendSpy).toHaveBeenCalledWith(expect.any(PutObjectCommand));
+
+  sendSpy.mockRestore();
+});
 
 
 describe('sendAlertNotificationEmail', () => {
