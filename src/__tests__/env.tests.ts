@@ -1,8 +1,8 @@
-import {
-    validateEnvVariable,
-    validateEmail,
-    validateAdditonalServicesConfig,
-} from '@root/env.config';
+import {validateEnvVariable,validateEmail,validateAdditonalServicesConfig,config} from '@root/env.config';
+
+ 
+const {ADMIN_EMAIL,ADMIN_EMAIL_PASSWORD,PUSHOVER_APP_TOKEN,PUSHOVER_USER_KEY,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION} = config
+
 
 describe('validateEnvVariable', () => {
     // Test when the environment variable does not exist

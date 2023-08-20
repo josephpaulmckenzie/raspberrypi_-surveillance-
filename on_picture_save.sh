@@ -1,19 +1,27 @@
 #!/bin/bash
-echo "Script started" >> /home/josephmckenzie/motion/debug.log
-
-FLAG_FILE=/home/josephmckenzie/motion/debug.log
+source /home/josephmckenzie/code/raspberrypi_surveillance/.env
+PROJECT_ROOT="${HOME}/code/raspberrypi_surveillance"
+LOG_FILE=$PROJECT_ROOT/debug.log
+FLAG_FILE=$PROJECT_ROOT/flag.txt
 PICTURE_FILE=$1
 
-echo "Checking for flag file $FLAG_FILE" >> /home/josephmckenzie/motion/debug.log
+echo "Script started" >> $LOG_FILE
+echo "Checking for flag file $FLAG_FILE" >> $LOG_FILE
+echo "ADMIN_EMAIL: $ADMIN_EMAIL"
+
+if [ ! -f "$PICTURE_FILE" ]; then
+  echo "Picture file not found" >> $LOG_FILE
+  exit 1
+fi
 
 if [ -f "$FLAG_FILE" ]; then
-  echo "Flag file found" >> /home/josephmckenzie/motion/debug.log
-  # Perform the desired action with the picture file, e.g. send a push notification
-  ts-node /home/josephmckenzie/code/raspberrypi_surveillance/src/handleEvents.ts onPictureSave $1
+  echo "Flag file found" >> $LOG_FILE
+    ts-node /home/josephmckenzie/code/raspberrypi_surveillance/src/handleEvents.ts onPictureSave $1
 
-  # Remove the flag file
   rm "$FLAG_FILE"
 else
-  echo "Flag file not found" >> /home/josephmckenzie/motion/debug.log
-  
+  echo "Flag file not found" >> $LOG_FILE
 fi
+
+# Rest of the script
+

@@ -1,5 +1,7 @@
 import AWS from 'aws-sdk';
-
+import { config } from '@root/env.config';
+ 
+const {ADMIN_EMAIL,ADMIN_EMAIL_PASSWORD,PUSHOVER_APP_TOKEN,PUSHOVER_USER_KEY,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION} = config
 import { uploadNewMotionEventToS3, sendAlertNotificationEmail } from '@src/awsFunctions';
 import { S3Client, PutObjectCommand, PutObjectOutput, S3 } from "@aws-sdk/client-s3";
 import mockFs from 'mock-fs';

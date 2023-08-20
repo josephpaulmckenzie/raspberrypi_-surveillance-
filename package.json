@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest && bats ./shell_tests/*.bats"
   },
   "author": "",
   "license": "ISC",

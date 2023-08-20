@@ -3,16 +3,16 @@ import fs from 'fs';
 import FormData from 'form-data';
 import * as nodemailer from 'nodemailer';
 import path from 'path';
-import {config} from '@root/env.config'
+import {config} from '../env.config'
 
-const {adminEmail,adminEmailPassword,pushoverAppToken,pushoverUserKey} = config;
+const {ADMIN_EMAIL,adminEmailPassword,pushoverAppToken,pushoverUserKey} = config;
 
 const getTransporter = () => nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
   secure: true,
   auth: {
-    user: adminEmail,
+    user: ADMIN_EMAIL,
     pass: adminEmailPassword
   }
 });
@@ -28,7 +28,7 @@ const formatRecipient = (recipient: string) => {
 export async function sendEmailorText(recipient: string, subject: string, message: string) {
   const transporter = getTransporter();
   const emailAddress = formatRecipient(recipient);
-  const from = process.env.ADMIN_EMAIL;
+  const from = ADMIN_EMAIL;
 
   const mailOptions = {
     from: from,

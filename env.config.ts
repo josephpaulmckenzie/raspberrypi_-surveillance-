@@ -1,6 +1,9 @@
 // env.config.ts
 import dotenv from 'dotenv';
-dotenv.config();
+
+dotenv.config({ path: '/home/josephmckenzie/code/raspberrypi_surveillance/.env' });
+
+
 
 export function validateEnvVariable(value: string | undefined, envName: string): string {
   if (value === undefined) {
@@ -24,7 +27,7 @@ export function validateEmail(email: string): string {
 }
 
 // Validate required environment variables
-const envKeys = [
+const envKeys: string[]  = [
   'ADMIN_EMAIL',
   'ADMIN_EMAIL_PASSWORD',
   'PUSHOVER_APP_TOKEN',
@@ -39,9 +42,9 @@ const config: Record<string, string> = {};
 for (const envKey of envKeys) {
   let envValue = validateEnvVariable(process.env[envKey], envKey);
 
-  if (envKey === 'ADMIN_EMAIL') {
-    envValue = validateEmail(envValue);
-  }
+  // if (envKey === 'ADMIN_EMAIL') {
+  //   envValue = validateEmail(envValue);
+  // }
   config[envKey] = envValue;
 }
 

@@ -1,10 +1,12 @@
 import { sendPushoverNotification, sendEmailorText } from '../notificationServices';
+ 
+import {onPictureSave} from '../handleEvents'
 import axios from 'axios';
 import fs from 'fs';
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import {config} from '@root/env.config'
 
-dotenv.config();
+const {ADMIN_EMAIL,adminEmailPassword,pushoverAppToken,pushoverUserKey} = config;
 
 // Mock axios for Pushover notification
 jest.mock('axios');
@@ -53,6 +55,21 @@ describe('Notification Services', () => {
     });
   });
 
+//   jest.mock('./notification');
+
+// describe('onPictureSave', () => {
+//   it('should call sendPushoverNotification with correct arguments', async () => {
+//     // Cast the sendPushoverNotification to a jest mock
+//     const mockSendPushoverNotification = sendPushoverNotification as jest.MockedFunction<typeof sendPushoverNotification>;
+
+//     // Call your onPictureSave function with test data
+//     await onPictureSave('test-file-path');
+
+//     // Assert that sendPushoverNotification was called with expected arguments
+//     expect(mockSendPushoverNotification).toHaveBeenCalledWith('!!! MOTION DETECTED !!!', '!!!!', 'test-file-path');
+//   });
+// });
+
   describe('sendEmailorText', () => {
     beforeEach(() => {
       mockSendMail.mockResolvedValue('Mock send mail response');
@@ -66,7 +83,7 @@ describe('Notification Services', () => {
       await sendEmailorText(recipient, subject, message);
 
       expect(mockSendMail).toHaveBeenCalledWith({
-        from: process.env.ADMIN_EMAIL,
+        from: ADMIN_EMAIL,
         to: recipient,
         subject: subject,
         text: message,
@@ -81,7 +98,7 @@ describe('Notification Services', () => {
       await sendEmailorText(recipient, subject, message);
 
       expect(mockSendMail).toHaveBeenCalledWith({
-        from: process.env.ADMIN_EMAIL,
+        from: ADMIN_EMAIL,
         to: recipient + '@vtext.com',
         subject: subject,
         text: message,
