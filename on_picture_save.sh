@@ -1,8 +1,8 @@
 #!/bin/bash
 source /home/josephmckenzie/code/raspberrypi_surveillance/.env
 PROJECT_ROOT="${HOME}/code/raspberrypi_surveillance"
-LOG_FILE=$PROJECT_ROOT/debug.log
-FLAG_FILE=$PROJECT_ROOT/flag.txt
+LOG_FILE='/home/josephmckenzie/motion/debug.log'
+FLAG_FILE='/home/josephmckenzie/motion/flag.txt'
 PICTURE_FILE=$1
 
 echo "Script started" >> $LOG_FILE

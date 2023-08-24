@@ -32,7 +32,7 @@ export async function onMovieEnd(filePath: string) {
 export async function onPictureSave(filePath: string) {
 
     try {
-        sendPushoverNotification("!!! MOTION DETECTED !!!", "!!!!", filePath)
+        // sendPushoverNotification("!!! MOTION DETECTED !!!", "!!!!", filePath)
     } catch (error) {
         console.log(error);
     }
